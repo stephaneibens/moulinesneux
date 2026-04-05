@@ -1,0 +1,154 @@
+// Schéma Prisma v7 — Portail Moulin d'Esneux
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  ADMIN
+  LOCATAIRE
+}
+
+enum StatutPaiement {
+  PAYE
+  EN_ATTENTE
+  RETARD
+}
+
+enum PrioriteAnnonce {
+  INFO
+  NORMALE
+  URGENTE
+}
+
+enum CategorieIntervention {
+  PLOMBERIE
+  ELECTRICITE
+  CHAUFFAGE
+  MENUISERIE
+  SERRURERIE
+  PEINTURE
+  NETTOYAGE
+  AUTRE
+}
+
+enum StatutIntervention {
+  SOUMISE
+  EN_COURS
+  RESOLUE
+  ANNULEE
+}
+
+enum PrioriteIntervention {
+  BASSE
+  NORMALE
+  URGENTE
+}
+
+enum TypeDocument {
+  BAIL
+  AVIS
+  REGLEMENT
+  FACTURE
+  AUTRE
+}
+
+model User {
+  id             Int       @id @default(autoincrement())
+  email          String    @unique
+  passwordHash   String
+  role           Role      @default(LOCATAIRE)
+  nom            String
+  prenom         String
+  telephone      String?
+  actif          Boolean   @default(true)
+  dateEcheanceBail DateTime?
+  garantieLocative Float?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  appartement    Appartement? @relation(fields: [appartementId], references: [id])
+  appartementId  Int?         @unique
+
+  paiements      Paiement[]
+  interventions  DemandeIntervention[]
+  documents      Document[]
+  annoncesCreees Annonce[]
+}
+
+model Appartement {
+  id              Int      @id @default(autoincrement())
+  numero          String   @unique
+  bloc            String
+  etage           Int
+  type            String
+  surface         Float
+  loyerMensuel    Float
+  chargeMensuelle Float
+  description     String?
+  disponible      Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  locataire       User?
+}
+
+model Paiement {
+  id           Int            @id @default(autoincrement())
+  montant      Float
+  datePaiement DateTime?
+  periode      String?
+  type         String         @default("LOYER")
+  statut       StatutPaiement @default(EN_ATTENTE)
+  reference    String?
+  notes        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  locataire    User           @relation(fields: [locataireId], references: [id])
+  locataireId  Int
+}
+
+model Annonce {
+  id          Int             @id @default(autoincrement())
+  titre       String
+  contenu     String
+  priorite    PrioriteAnnonce @default(NORMALE)
+  visible     Boolean         @default(true)
+  documentUrl String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  publiePar   User            @relation(fields: [publieParId], references: [id])
+  publieParId Int
+}
+
+model DemandeIntervention {
+  id                Int                   @id @default(autoincrement())
+  categorie         CategorieIntervention
+  description       String
+  statut            StatutIntervention    @default(SOUMISE)
+  priorite          PrioriteIntervention  @default(NORMALE)
+  commentaireAdmin  String?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
+
+  locataire         User?                 @relation(fields: [locataireId], references: [id])
+  locataireId       Int?
+}
+
+model Document {
+  id          Int          @id @default(autoincrement())
+  nom         String
+  type        TypeDocument
+  description String?
+  url         String
+  commun      Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+
+  locataire   User?        @relation(fields: [locataireId], references: [id])
+  locataireId Int?
+}

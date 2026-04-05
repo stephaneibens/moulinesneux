@@ -1,0 +1,18 @@
+import { NextResponse } from 'next/server'
+import { requireAuth } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+
+export async function GET() {
+  const user = await requireAuth('ADMIN')
+  if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  const docs = prisma.document.findMany({ include: { locataire: { select: { nom: true, prenom: true } } } })
+  return NextResponse.json(docs)
+}
+
+export async function POST(request: Request) {
+  const user = await requireAuth('ADMIN')
+  if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+  const { nom, type, description, url, commun, locataireId } = await request.json()
+  const doc = prisma.document.create({ nom, type, description: description || null, url, commun: !!commun, locataireId: locataireId || null })
+  return NextResponse.json(doc)
+}

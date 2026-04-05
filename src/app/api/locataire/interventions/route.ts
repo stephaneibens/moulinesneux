@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   const user = await requireAuth('LOCATAIRE')
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  const items = prisma.demandeIntervention.findMany({ where: { locataireId: user.id } })
+  const items = await prisma.demandeIntervention.findMany({ where: { locataireId: user.id } })
   return NextResponse.json(items)
 }
 
@@ -16,9 +16,11 @@ export async function POST(request: Request) {
   if (!categorie || !description) {
     return NextResponse.json({ error: 'Catégorie et description requises' }, { status: 400 })
   }
-  const item = prisma.demandeIntervention.create({
-    locataireId: user.id, categorie, description,
-    statut: 'SOUMISE', priorite: priorite || 'NORMALE', commentaireAdmin: null,
+  const item = await prisma.demandeIntervention.create({
+    data: {
+      locataireId: user.id, categorie, description,
+      statut: 'SOUMISE', priorite: priorite || 'NORMALE', commentaireAdmin: null,
+    }
   })
   return NextResponse.json(item)
 }

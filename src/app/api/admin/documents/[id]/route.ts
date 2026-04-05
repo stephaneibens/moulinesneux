@@ -7,7 +7,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     const user = await requireAuth('ADMIN')
     if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     const { id } = await params
-    prisma.document.delete({ id: parseInt(id) })
+    await prisma.document.delete({ where: { id: parseInt(id) } })
     return NextResponse.json({ success: true })
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })
@@ -20,7 +20,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     const { id } = await params
     const body = await request.json()
-    const doc = prisma.document.update({ id: parseInt(id) }, body)
+    const doc = await prisma.document.update({ where: { id: parseInt(id) }, data: body })
     return NextResponse.json(doc)
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 })

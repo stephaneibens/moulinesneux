@@ -5,11 +5,16 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   const user = await requireAuth('LOCATAIRE')
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  const annonces = prisma.annonce.findMany({
+  const annoncesDb = await prisma.annonce.findMany({
     where: { visible: true },
-  }).map(a => ({
-    ...a,
-    publiePar: prisma.user.findUnique({ id: a.publieParId }) ? { prenom: prisma.user.findUnique({ id: a.publieParId })?.prenom || '', nom: prisma.user.findUnique({ id: a.publieParId })?.nom || '' } : null,
+  })
+  
+  const annonces = await Promise.all(annoncesDb.map(async (a) => {
+    const publieParUser = await prisma.user.findUnique({ where: { id: a.publieParId } })
+    return {
+      ...a,
+      publiePar: publieParUser ? { prenom: publieParUser.prenom || '', nom: publieParUser.nom || '' } : null,
+    }
   }))
   return NextResponse.json(annonces)
 }

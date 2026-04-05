@@ -8,7 +8,7 @@ export async function POST() {
     if (!admin) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
 
     // Find all locataires that have an appartement
-    const locataires = prisma.user.findMany({ where: { role: 'LOCATAIRE', actif: true }, include: { appartement: true } })
+    const locataires = await prisma.user.findMany({ where: { role: 'LOCATAIRE', actif: true }, include: { appartement: true } })
     const activeLocataires = locataires.filter(l => l.appartementId && l.appartement)
 
     const nextMonth = new Date()
@@ -27,17 +27,19 @@ export async function POST() {
       const total = loyer + charges
 
       // Prevent duplicate generation for same month
-      const existing = prisma.paiement.findFirst({ locataireId: l.id, periode: periode })
+      const existing = await prisma.paiement.findFirst({ where: { locataireId: l.id, periode: periode } })
       if (!existing && total > 0) {
-        prisma.paiement.create({
-          locataireId: l.id,
-          montant: total,
-          periode: periode,
-          type: 'LOYER',
-          statut: 'EN_ATTENTE',
-          notes: '',
-          datePaiement: null,
-          reference: null
+        await prisma.paiement.create({
+          data: {
+            locataireId: l.id,
+            montant: total,
+            periode: periode,
+            type: 'LOYER',
+            statut: 'EN_ATTENTE',
+            notes: '',
+            datePaiement: null,
+            reference: null
+          }
         })
         createdCount++
       }

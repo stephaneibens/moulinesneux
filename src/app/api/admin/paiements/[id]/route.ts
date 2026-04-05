@@ -11,14 +11,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (datePaiement === undefined) {
     datePaiement = body.statut === 'PAYE' ? new Date().toISOString() : null;
   }
-  const updated = prisma.paiement.update({ id: parseInt(id) }, { 
+  const updated = await prisma.paiement.update({ where: { id: parseInt(id) }, data: { 
     statut: body.statut, 
     datePaiement, 
     notes: body.notes,
     type: body.type,
     periode: body.periode,
     montant: body.montant !== undefined ? Number(body.montant) : undefined
-  })
+  }})
   return NextResponse.json(updated)
 }
 
@@ -32,10 +32,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     if (id === 'bulk') {
       const body = await request.json()
       if (body.ids && Array.isArray(body.ids)) {
-        prisma.paiement.deleteMany({ id_in: body.ids })
+        await prisma.paiement.deleteMany({ where: { id: { in: body.ids } } })
       }
     } else {
-      prisma.paiement.delete({ id: parseInt(id) })
+      await prisma.paiement.delete({ where: { id: parseInt(id) } })
     }
     return NextResponse.json({ success: true })
   } catch (error: any) {

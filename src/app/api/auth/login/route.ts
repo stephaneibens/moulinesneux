@@ -11,9 +11,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Email et mot de passe requis.' }, { status: 400 })
     }
 
-    const user = prisma.user.findUnique({ email: email.toLowerCase().trim() })
-
-    if (!user || !(user.actif === true || user.actif === 1)) {
+    const user = await prisma.user.findUnique({ where: { email: email.toLowerCase().trim() } })
+    
+    if (!user || !(user.actif === true)) {
       return NextResponse.json({ error: 'Identifiants invalides ou compte désactivé.' }, { status: 401 })
     }
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
       path: '/',
     })
 
-    const appartement = user.appartementId ? prisma.appartement.findUnique({ id: user.appartementId }) : null
+    const appartement = user.appartementId ? await prisma.appartement.findUnique({ where: { id: user.appartementId } }) : null
 
     return NextResponse.json({
       user: {

@@ -18,6 +18,7 @@ async function main() {
     for (const row of appartements) {
         await pg.appartement.create({
             data: {
+                id: row.id,
                 numero: row.numero,
                 bloc: row.bloc,
                 etage: row.etage,
@@ -27,6 +28,8 @@ async function main() {
                 chargeMensuelle: row.chargeMensuelle,
                 description: row.description,
                 disponible: !!row.disponible,
+                peb: row.peb,
+                ean: row.ean,
                 createdAt: new Date(row.createdAt),
                 updatedAt: new Date(row.updatedAt),
             },
@@ -38,6 +41,7 @@ async function main() {
     for (const row of users) {
         await pg.user.create({
             data: {
+                id: row.id,
                 email: row.email,
                 passwordHash: row.passwordHash,
                 role: row.role,
@@ -59,6 +63,7 @@ async function main() {
     for (const row of paiements) {
         await pg.paiement.create({
             data: {
+                id: row.id,
                 montant: row.montant,
                 datePaiement: row.datePaiement ? new Date(row.datePaiement) : null,
                 periode: row.periode,
@@ -78,6 +83,7 @@ async function main() {
     for (const row of annonces) {
         await pg.annonce.create({
             data: {
+                id: row.id,
                 titre: row.titre,
                 contenu: row.contenu,
                 priorite: row.priorite,
@@ -95,6 +101,7 @@ async function main() {
     for (const row of interventions) {
         await pg.demandeIntervention.create({
             data: {
+                id: row.id,
                 categorie: row.categorie,
                 description: row.description,
                 statut: row.statut,
@@ -109,11 +116,13 @@ async function main() {
     console.log(`Interventions transférées: ${interventions.length}`);
 
     const documents = sqlite.prepare("SELECT * FROM Document").all() as any[];
+    const safeTypes = ['BAIL', 'AVIS', 'REGLEMENT', 'FACTURE', 'ETAT_LIEUX_ENTREE', 'ETAT_LIEUX_SORTIE', 'PIECE_IDENTITE', 'DECOMPTE', 'AUTRE'];
     for (const row of documents) {
         await pg.document.create({
             data: {
+                id: row.id,
                 nom: row.nom,
-                type: row.type,
+                type: safeTypes.includes(row.type) ? row.type : 'AUTRE',
                 description: row.description,
                 url: row.url,
                 commun: !!row.commun,

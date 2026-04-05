@@ -7,7 +7,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   const { id } = await params
   const body = await request.json()
-  const updated = prisma.demandeIntervention.update({ id: parseInt(id) }, body)
+  const updated = await prisma.demandeIntervention.update({ where: { id: parseInt(id) }, data: body })
   return NextResponse.json(updated)
 }
 
@@ -15,6 +15,6 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   const user = await requireAuth('ADMIN')
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   const { id } = await params
-  prisma.demandeIntervention.delete({ id: parseInt(id) })
+  await prisma.demandeIntervention.delete({ where: { id: parseInt(id) } })
   return NextResponse.json({ success: true })
 }

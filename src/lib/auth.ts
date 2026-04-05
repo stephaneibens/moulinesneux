@@ -40,7 +40,7 @@ export async function getCurrentUser() {
     const payload = verifyToken(token)
     if (!payload) return null
 
-    const user = db.user.findUnique({ id: payload.userId }, { include: { appartement: true } })
+    const user = await db.user.findUnique({ where: { id: payload.userId }, include: { appartement: true } })
     return user ? JSON.parse(JSON.stringify(user)) : null
   } catch {
     return null
@@ -50,7 +50,7 @@ export async function getCurrentUser() {
 export async function requireAuth(role?: string) {
   const user = await getCurrentUser()
   if (!user) return null
-  if (!(user.actif === true || user.actif === 1)) return null
+  if (!(user.actif === true)) return null
   if (role && user.role !== role) return null
   return user
 }

@@ -54,6 +54,10 @@ enum TypeDocument {
   AVIS
   REGLEMENT
   FACTURE
+  ETAT_LIEUX_ENTREE
+  ETAT_LIEUX_SORTIE
+  PIECE_IDENTITE
+  DECOMPTE
   AUTRE
 }
 
@@ -91,6 +95,8 @@ model Appartement {
   chargeMensuelle Float
   description     String?
   disponible      Boolean  @default(true)
+  peb             String?
+  ean             String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 

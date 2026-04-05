@@ -1,10 +1,15 @@
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
-import path from 'node:path'
+import "dotenv/config";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 
-const prisma = new PrismaClient({
-  // datasourceUrl via prisma.config.ts
-})
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL!,
+});
+
+const prisma = new PrismaClient({ adapter });
+
+
 
 // Override via env for seed script
 

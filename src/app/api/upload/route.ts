@@ -26,8 +26,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ url: blob.url });
-  } catch (e) {
+  } catch (e: any) {
     console.error('Erreur upload:', e);
-    return NextResponse.json({ error: "Erreur lors de l'upload du fichier" }, { status: 500 });
+    return NextResponse.json({ error: e.message || "Erreur lors de l'upload du fichier" }, { status: 500 });
   }
 }

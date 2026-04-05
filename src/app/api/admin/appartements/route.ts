@@ -5,7 +5,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   const user = await requireAuth('ADMIN')
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  const apts = prisma.appartement.findMany({
+  const apts = await prisma.appartement.findMany({
     include: { locataire: { select: { id: true, nom: true, prenom: true, email: true } } },
     orderBy: { numero: 'asc' }
   })
@@ -16,6 +16,6 @@ export async function POST(request: Request) {
   const user = await requireAuth('ADMIN')
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
   const body = await request.json()
-  const apt = prisma.appartement.create(body)
+  const apt = await prisma.appartement.create({ data: body })
   return NextResponse.json(apt)
 }

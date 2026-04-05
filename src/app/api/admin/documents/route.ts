@@ -12,7 +12,12 @@ export async function GET() {
 export async function POST(request: Request) {
   const user = await requireAuth('ADMIN')
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  const { nom, type, description, url, commun, locataireId } = await request.json()
-  const doc = await prisma.document.create({ data: { nom, type, description: description || null, url, commun: !!commun, locataireId: locataireId || null } })
-  return NextResponse.json(doc)
+  try {
+    const { nom, type, description, url, commun, locataireId } = await request.json()
+    const doc = await prisma.document.create({ data: { nom, type, description: description || null, url, commun: !!commun, locataireId: locataireId || null } })
+    return NextResponse.json(doc)
+  } catch (e: any) {
+    console.error("Prisma error in create document:", e);
+    return NextResponse.json({ error: e.message || 'Erreur base de données' }, { status: 500 });
+  }
 }

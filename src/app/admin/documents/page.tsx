@@ -36,7 +36,17 @@ export default function AdminDocuments() {
     } else {
       res = await fetch('/api/admin/documents', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     }
-    if (res.ok) { fetch('/api/admin/documents').then(r => r.json()).then(setDocs); setMsg(form.id ? '✅ Document modifié.' : '✅ Document ajouté.'); setForm({ id: 0, nom: '', type: 'AVIS', description: '', url: '', commun: true, locataireId: '' }); setShowForm(false); setTimeout(() => setMsg(''), 4000) }
+    if (res.ok) { 
+      fetch('/api/admin/documents').then(r => r.json()).then(setDocs); 
+      setMsg(form.id ? '✅ Document modifié.' : '✅ Document ajouté.'); 
+      setForm({ id: 0, nom: '', type: 'AVIS', description: '', url: '', commun: true, locataireId: '' }); 
+      setShowForm(false); 
+      setTimeout(() => setMsg(''), 4000) 
+    } else {
+      const errorData = await res.json().catch(() => ({}));
+      setMsg(`❌ Erreur serveur: ${errorData.error || 'Erreur inconnue'}`);
+      setTimeout(() => setMsg(''), 8000);
+    }
   }
 
   const editDoc = (d: Document) => {

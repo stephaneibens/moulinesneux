@@ -1,8 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { writeFile, mkdir } from 'fs/promises';
-import { join } from 'path';
-import { existsSync } from 'fs';
+import { put } from '@vercel/blob';
 
 export async function POST(req: Request) {
   try {
@@ -18,22 +16,16 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 });
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-
-    const uploadsDir = join(process.cwd(), 'public', 'uploads');
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
     const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
     const filename = uniqueSuffix + '-' + safeName;
-    const path = join(uploadsDir, filename);
 
-    await writeFile(path, buffer);
+    const blob = await put(filename, file, { 
+      access: 'public',
+      addRandomSuffix: false 
+    });
 
-    return NextResponse.json({ url: `/uploads/${filename}` });
+    return NextResponse.json({ url: blob.url });
   } catch (e) {
     console.error('Erreur upload:', e);
     return NextResponse.json({ error: "Erreur lors de l'upload du fichier" }, { status: 500 });

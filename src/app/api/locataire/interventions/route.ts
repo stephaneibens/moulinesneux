@@ -12,14 +12,15 @@ export async function GET() {
 export async function POST(request: Request) {
   const user = await requireAuth('LOCATAIRE')
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  const { categorie, description, priorite } = await request.json()
-  if (!categorie || !description) {
-    return NextResponse.json({ error: 'Catégorie et description requises' }, { status: 400 })
+  const { categorie, description, priorite, localisation, photos } = await request.json()
+  if (!categorie || !description || !localisation) {
+    return NextResponse.json({ error: 'Catégorie, description et localisation requises' }, { status: 400 })
   }
   const item = await prisma.demandeIntervention.create({
     data: {
       locataireId: user.id, categorie, description,
       statut: 'SOUMISE', priorite: priorite || 'NORMALE', commentaireAdmin: null,
+      localisation, photos: photos || []
     }
   })
   return NextResponse.json(item)

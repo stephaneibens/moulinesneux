@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-interface Intervention { id: number; categorie: string; description: string; statut: string; priorite: string; commentaireAdmin: string | null; createdAt: string; locataire: { nom: string; prenom: string; appartement: { numero: string } | null } | null }
+interface Intervention { id: number; categorie: string; description: string; statut: string; priorite: string; commentaireAdmin: string | null; localisation?: string | null; photos?: string[]; createdAt: string; locataire: { nom: string; prenom: string; appartement: { numero: string } | null } | null }
 
 const catLabel: Record<string, string> = { PLOMBERIE: '🚿 Plomberie', ELECTRICITE: '⚡ Électricité', CHAUFFAGE: '🔥 Chauffage', MENUISERIE: '🪵 Menuiserie', SERRURERIE: '🔑 Serrurerie', PEINTURE: '🎨 Peinture', NETTOYAGE: '🧹 Nettoyage', AUTRE: '🔧 Autre' }
 const statutChip: Record<string, string> = { SOUMISE: 'chip-neutral', EN_COURS: 'chip-warning', RESOLUE: 'chip-success', ANNULEE: 'chip-error' }
@@ -129,6 +129,16 @@ export default function AdminInterventions() {
                 <div className="modal-body">
                   <div style={{ background: 'var(--surface-low)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)', marginBottom: 'var(--space-4)' }}>
                     <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>{editI.locataire ? `${editI.locataire.prenom} ${editI.locataire.nom} (Apt. ${editI.locataire.appartement?.numero || '?'})` : '🏢 Immeuble Général'}</p>
+                    {editI.localisation && <p style={{ fontSize: '0.85rem', marginTop: 'var(--space-2)' }}>📍 Localisation: {editI.localisation}</p>}
+                    {editI.photos && editI.photos.length > 0 && (
+                      <div style={{ display: 'flex', gap: 'var(--space-2)', marginTop: 'var(--space-2)', flexWrap: 'wrap' }}>
+                        {editI.photos.map((url, idx) => (
+                           <a key={idx} href={url} target="_blank" rel="noopener noreferrer">
+                             <img src={url} alt={`Photo ${idx + 1}`} style={{ height: 50, width: 50, objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border)' }} />
+                           </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="form-group"><label className="form-label">Catégorie</label>
                     <select className="form-select" value={categorie} onChange={e => setCategorie(e.target.value)}>
@@ -168,12 +178,13 @@ export default function AdminInterventions() {
 
         <div className="table-wrapper">
           <table className="table">
-            <thead><tr><th>Locataire</th><th>Apt.</th><th>Catégorie</th><th>Description</th><th>Priorité</th><th>Statut</th><th>Date</th><th>Action</th></tr></thead>
+            <thead><tr><th>Locataire</th><th>Apt.</th><th>Lieu</th><th>Catégorie</th><th>Description</th><th>Priorité</th><th>Statut</th><th>Date</th><th>Action</th></tr></thead>
             <tbody>
               {filtered.map(i => (
                 <tr key={i.id}>
                   <td style={{ fontWeight: 600 }}>{i.locataire ? `${i.locataire.prenom} ${i.locataire.nom}` : <span className="chip chip-info" style={{ fontSize: '0.7rem' }}>Immeuble</span>}</td>
                   <td>{i.locataire?.appartement ? <span className="chip chip-primary" style={{ fontSize: '0.7rem' }}>{i.locataire.appartement.numero}</span> : '—'}</td>
+                  <td style={{ fontSize: '0.85rem' }}>{i.localisation || '—'}</td>
                   <td style={{ fontSize: '0.85rem' }}>{catLabel[i.categorie]}</td>
                   <td style={{ fontSize: '0.82rem', color: 'var(--on-surface-variant)', maxWidth: '200px' }}>{i.description.slice(0, 80)}{i.description.length > 80 ? '...' : ''}</td>
                   <td><span className={`chip ${prioriteChip[i.priorite]}`}>{i.priorite}</span></td>

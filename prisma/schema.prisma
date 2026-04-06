@@ -140,6 +140,8 @@ model DemandeIntervention {
   statut            StatutIntervention    @default(SOUMISE)
   priorite          PrioriteIntervention  @default(NORMALE)
   commentaireAdmin  String?
+  localisation      String?
+  photos            String[]
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
 

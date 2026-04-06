@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-interface Intervention { id: number; categorie: string; description: string; statut: string; priorite: string; commentaireAdmin: string | null; createdAt: string; updatedAt: string }
+interface Intervention { id: number; categorie: string; description: string; statut: string; priorite: string; commentaireAdmin: string | null; localisation?: string | null; photos?: string[]; createdAt: string; updatedAt: string }
 
 const CATEGORIES = ['PLOMBERIE', 'ELECTRICITE', 'CHAUFFAGE', 'MENUISERIE', 'SERRURERIE', 'PEINTURE', 'NETTOYAGE', 'AUTRE']
 const catLabel: Record<string, string> = { PLOMBERIE: '🚿 Plomberie', ELECTRICITE: '⚡ Électricité', CHAUFFAGE: '🔥 Chauffage', MENUISERIE: '🪵 Menuiserie', SERRURERIE: '🔑 Serrurerie', PEINTURE: '🎨 Peinture', NETTOYAGE: '🧹 Nettoyage', AUTRE: '🔧 Autre' }
@@ -13,28 +13,62 @@ export default function InterventionsPage() {
   const [interventions, setInterventions] = useState<Intervention[]>([])
   const [showForm, setShowForm] = useState(false)
   const [categorie, setCategorie] = useState('PLOMBERIE')
+  const [localisation, setLocalisation] = useState('')
+  const [photosFiles, setPhotosFiles] = useState<File[]>([])
   const [description, setDescription] = useState('')
   const [priorite, setPriorite] = useState('NORMALE')
   const [submitting, setSubmitting] = useState(false)
   const [msg, setMsg] = useState('')
+  const [uploadError, setUploadError] = useState('')
 
   useEffect(() => {
     fetch('/api/locataire/interventions').then(r => r.json()).then(setInterventions)
   }, [])
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const selectedObj = Array.from(e.target.files)
+      setUploadError('')
+      const invalids = selectedObj.filter(f => f.size > 30 * 1024 * 1024)
+      if (invalids.length > 0) {
+        setUploadError('Certaines photos dépassent la taille maximale de 30 MB.')
+        return
+      }
+      setPhotosFiles(selectedObj)
+    }
+  }
+
   const soumettre = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!description.trim()) return
+    if (!description.trim() || !localisation) return
     setSubmitting(true)
+    setUploadError('')
+    
+    const photosUrls: string[] = []
+    try {
+      for (const file of photosFiles) {
+        const formData = new FormData()
+        formData.append('file', file)
+        const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData })
+        const uploadData = await uploadRes.json()
+        if (!uploadRes.ok) throw new Error(uploadData.error || 'Erreur upload')
+        photosUrls.push(uploadData.url)
+      }
+    } catch(e: any) {
+      setUploadError(e.message)
+      setSubmitting(false)
+      return
+    }
+
     const res = await fetch('/api/locataire/interventions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ categorie, description, priorite }),
+      body: JSON.stringify({ categorie, description, priorite, localisation, photos: photosUrls }),
     })
     if (res.ok) {
       const newItem = await res.json()
       setInterventions(prev => [newItem, ...prev])
-      setDescription(''); setShowForm(false)
+      setDescription(''); setShowForm(false); setLocalisation(''); setPhotosFiles([]);
       setMsg('✅ Demande soumise avec succès !')
       setTimeout(() => setMsg(''), 4000)
     }
@@ -66,6 +100,14 @@ export default function InterventionsPage() {
                     </select>
                   </div>
                   <div className="form-group">
+                    <label className="form-label">Localisation du problème *</label>
+                    <select className="form-select" value={localisation} onChange={e => setLocalisation(e.target.value)} required>
+                      <option value="" disabled>Sélectionnez la localisation</option>
+                      <option value="Dans mon appartement">Dans mon appartement</option>
+                      <option value="Dans l'immeuble">Dans l'immeuble</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
                     <label className="form-label">Priorité</label>
                     <select className="form-select" value={priorite} onChange={e => setPriorite(e.target.value)}>
                       <option value="BASSE">🟢 Basse</option>
@@ -74,8 +116,14 @@ export default function InterventionsPage() {
                     </select>
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Description du problème</label>
+                    <label className="form-label">Description du problème *</label>
                     <textarea className="form-textarea" value={description} onChange={e => setDescription(e.target.value)} placeholder="Décrivez le problème en détail..." required rows={4} />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 'var(--space-4)' }}>
+                    <label className="form-label">Photos (JPG, PNG, max 30 MB)</label>
+                    <input type="file" className="form-control" multiple accept="image/png, image/jpeg" onChange={handleFileChange} />
+                    {uploadError && <p style={{ color: 'var(--error)', fontSize: '0.8rem', marginTop: 'var(--space-2)' }}>{uploadError}</p>}
+                    {photosFiles.length > 0 && <p style={{ fontSize: '0.8rem', marginTop: 'var(--space-2)' }}>{photosFiles.length} fichier(s) sélectionné(s)</p>}
                   </div>
                 </div>
                 <div className="modal-footer">
@@ -107,7 +155,17 @@ export default function InterventionsPage() {
                       </div>
                       <span className={`chip ${si.chip}`}>{si.label}</span>
                     </div>
+                    {i.localisation && <p style={{ fontWeight: 600, fontSize: '0.9rem', marginBottom: 'var(--space-2)' }}>📍 {i.localisation}</p>}
                     <p style={{ color: 'var(--on-surface-variant)', fontSize: '0.9rem', marginBottom: 'var(--space-3)' }}>{i.description}</p>
+                    {i.photos && i.photos.length > 0 && (
+                      <div style={{ display: 'flex', gap: 'var(--space-3)', flexWrap: 'wrap', marginBottom: 'var(--space-3)' }}>
+                        {i.photos.map((url, idx) => (
+                          <a key={idx} href={url} target="_blank" rel="noopener noreferrer">
+                            <img src={url} alt={`Photo ${idx + 1}`} style={{ height: 60, width: 60, objectFit: 'cover', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }} />
+                          </a>
+                        ))}
+                      </div>
+                    )}
                     {i.commentaireAdmin && (
                       <div style={{ background: 'var(--info-container)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3) var(--space-4)', fontSize: '0.85rem', color: 'var(--info)' }}>
                         <strong>💬 Réponse de la gestion :</strong> {i.commentaireAdmin}

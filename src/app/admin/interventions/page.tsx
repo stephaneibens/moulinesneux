@@ -206,14 +206,12 @@ export default function AdminInterventions() {
 
         <div className="table-wrapper">
           <table className="table">
-            <thead><tr><th>Locataire</th><th>Apt.</th><th>Lieu</th><th>Catégorie</th><th>Priorité</th><th>Statut</th><th>Dates</th><th>Montants</th><th>Action</th></tr></thead>
+            <thead><tr><th>Locataire</th><th>Apt.</th><th>Catégorie</th><th>Priorité</th><th>Statut</th><th>Dates</th><th>Montants</th><th>Action</th></tr></thead>
             <tbody>
               {filtered.map(i => (
                 <tr key={i.id}>
                   <td style={{ fontWeight: 600 }}>{i.locataire ? `${i.locataire.prenom} ${i.locataire.nom}` : <span className="chip chip-info" style={{ fontSize: '0.7rem' }}>Immeuble</span>}</td>
                   <td>{i.locataire?.appartement ? <span className="chip chip-primary" style={{ fontSize: '0.7rem' }}>{i.locataire.appartement.numero}</span> : '—'}</td>
-                  <td style={{ fontSize: '0.85rem' }}>{i.localisation || '—'}</td>
-                  <td style={{ fontSize: '0.85rem' }}>{catLabel[i.categorie]}</td>
                   <td style={{ fontSize: '0.85rem' }}>{catLabel[i.categorie]}</td>
                   <td><span className={`chip ${prioriteChip[i.priorite]}`}>{i.priorite}</span></td>
                   <td><span className={`chip ${statutChip[i.statut]}`}>{i.statut}</span></td>

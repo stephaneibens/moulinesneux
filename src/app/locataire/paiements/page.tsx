@@ -19,17 +19,7 @@ export default function PaiementsPage() {
     fetch('/api/locataire/paiements').then(r => r.json()).then(d => { setPaiements(d); setLoading(false) })
   }, [])
 
-  const marquerPayé = async (id: number) => {
-    setPaying(id)
-    try {
-      const res = await fetch('/api/locataire/paiements', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paiementId: id }) })
-      if (res.ok) {
-        setPaiements(prev => prev.map(p => p.id === id ? { ...p, statut: 'PAYE', datePaiement: new Date().toISOString() } : p))
-        setMessage('✅ Paiement enregistré avec succès !')
-        setTimeout(() => setMessage(''), 4000)
-      }
-    } finally { setPaying(null) }
-  }
+
 
   const total = paiements.reduce((s, p) => s + (p.statut === 'PAYE' ? p.montant : 0), 0)
   const enAttente = paiements.filter(p => p.statut !== 'PAYE').length
@@ -62,7 +52,6 @@ export default function PaiementsPage() {
                     <th>Date paiement</th>
                     <th>Référence</th>
                     <th>Statut</th>
-                    <th>Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -77,19 +66,6 @@ export default function PaiementsPage() {
                         </td>
                         <td style={{ fontSize: '0.8rem', color: 'var(--on-surface-muted)', fontFamily: 'monospace' }}>{p.reference || '—'}</td>
                         <td><span className={`chip ${info.chip}`}>{info.icon} {info.label}</span></td>
-                        <td>
-                          {p.statut !== 'PAYE' ? (
-                            <button
-                              onClick={() => marquerPayé(p.id)}
-                              disabled={paying === p.id}
-                              className="btn btn-success btn-sm"
-                            >
-                              {paying === p.id ? '⏳...' : '✅ Marquer payé'}
-                            </button>
-                          ) : (
-                            <span style={{ fontSize: '0.8rem', color: 'var(--success)' }}>✅ Acquitté</span>
-                          )}
-                        </td>
                       </tr>
                     )
                   })}

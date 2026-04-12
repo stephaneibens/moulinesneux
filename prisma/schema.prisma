@@ -58,6 +58,9 @@ enum TypeDocument {
   ETAT_LIEUX_SORTIE
   PIECE_IDENTITE
   DECOMPTE
+  GARANTIE
+  COURRIER
+  ENREGISTREMENT
   AUTRE
 }
 
@@ -142,6 +145,10 @@ model DemandeIntervention {
   commentaireAdmin  String?
   localisation      String?
   photos            String[]
+  dateInterventionEstimee DateTime?
+  dateCloture       DateTime?
+  montantLocataire  Float?
+  montantProprietaire Float?
   createdAt         DateTime              @default(now())
   updatedAt         DateTime              @updatedAt
 

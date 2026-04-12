@@ -8,7 +8,7 @@ interface DropzoneProps {
   maxSizeMB?: number
 }
 
-export function Dropzone({ onUpload, accept = "*/*", maxSizeMB = 10 }: DropzoneProps) {
+export function Dropzone({ onUpload, accept = "*/*", maxSizeMB = 70 }: DropzoneProps) {
   const [isHover, setIsHover] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)

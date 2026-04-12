@@ -16,9 +16,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 });
     }
 
-    const MAX_SIZE = 30 * 1024 * 1024;
+    const MAX_SIZE = 70 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: 'Le fichier dépasse la taille maximale de 30 MB' }, { status: 400 });
+      return NextResponse.json({ error: 'Le fichier dépasse la taille maximale de 70 MB' }, { status: 400 });
     }
 
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);

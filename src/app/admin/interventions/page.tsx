@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-interface Intervention { id: number; categorie: string; description: string; statut: string; priorite: string; commentaireAdmin: string | null; localisation?: string | null; photos?: string[]; createdAt: string; locataire: { nom: string; prenom: string; appartement: { numero: string } | null } | null }
+interface Intervention { id: number; categorie: string; description: string; statut: string; priorite: string; commentaireAdmin: string | null; localisation?: string | null; photos?: string[]; createdAt: string; locataire: { nom: string; prenom: string; appartement: { numero: string } | null } | null; dateInterventionEstimee?: string | null; dateCloture?: string | null; montantLocataire?: number | null; montantProprietaire?: number | null; }
 
 const catLabel: Record<string, string> = { PLOMBERIE: '🚿 Plomberie', ELECTRICITE: '⚡ Électricité', CHAUFFAGE: '🔥 Chauffage', MENUISERIE: '🪵 Menuiserie', SERRURERIE: '🔑 Serrurerie', PEINTURE: '🎨 Peinture', NETTOYAGE: '🧹 Nettoyage', AUTRE: '🔧 Autre' }
 const statutChip: Record<string, string> = { SOUMISE: 'chip-neutral', EN_COURS: 'chip-warning', RESOLUE: 'chip-success', ANNULEE: 'chip-error' }
@@ -14,6 +14,7 @@ export default function AdminInterventions() {
   const [showCreate, setShowCreate] = useState(false)
   const [createForm, setCreateForm] = useState({ locataireId: '', categorie: 'PLOMBERIE', priorite: 'NORMALE', description: '' })
   const [statut, setStatut] = useState(''); const [commentaire, setCommentaire] = useState(''); const [priorite, setPriorite] = useState(''); const [categorie, setCategorie] = useState(''); const [description, setDescription] = useState('')
+  const [dateIntEst, setDateIntEst] = useState(''); const [dateClo, setDateClo] = useState(''); const [montL, setMontL] = useState(''); const [montP, setMontP] = useState('')
   const [filtre, setFiltre] = useState('')
   const [msg, setMsg] = useState('')
 
@@ -22,7 +23,13 @@ export default function AdminInterventions() {
     fetch('/api/admin/locataires').then(r => r.json()).then(setLocataires)
   }, [])
 
-  const openEdit = (i: Intervention) => { setEditI(i); setStatut(i.statut); setCommentaire(i.commentaireAdmin || ''); setPriorite(i.priorite); setCategorie(i.categorie); setDescription(i.description); }
+  const openEdit = (i: Intervention) => { 
+    setEditI(i); setStatut(i.statut); setCommentaire(i.commentaireAdmin || ''); setPriorite(i.priorite); setCategorie(i.categorie); setDescription(i.description); 
+    setDateIntEst(i.dateInterventionEstimee ? new Date(i.dateInterventionEstimee).toISOString().substring(0,10) : '');
+    setDateClo(i.dateCloture ? new Date(i.dateCloture).toISOString().substring(0,10) : '');
+    setMontL(i.montantLocataire != null ? String(i.montantLocataire) : '');
+    setMontP(i.montantProprietaire != null ? String(i.montantProprietaire) : '');
+  }
 
   const submitCreate = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,9 +46,14 @@ export default function AdminInterventions() {
 
   const save = async (e: React.FormEvent) => {
     e.preventDefault(); if (!editI) return
-    const res = await fetch(`/api/admin/interventions/${editI.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ statut, commentaireAdmin: commentaire, priorite, categorie, description }) })
+    const body: any = { statut, commentaireAdmin: commentaire, priorite, categorie, description }
+    body.dateInterventionEstimee = dateIntEst ? new Date(dateIntEst).toISOString() : null
+    body.dateCloture = dateClo ? new Date(dateClo).toISOString() : null
+    body.montantLocataire = montL ? parseFloat(montL) : null
+    body.montantProprietaire = montP ? parseFloat(montP) : null
+    const res = await fetch(`/api/admin/interventions/${editI.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     if (res.ok) {
-      setInterventions(prev => prev.map(i => i.id === editI.id ? { ...i, statut, commentaireAdmin: commentaire, priorite, categorie, description } : i))
+      setInterventions(prev => prev.map(i => i.id === editI.id ? { ...i, ...body } : i))
       setMsg('✅ Intervention mise à jour.'); setEditI(null)
       setTimeout(() => setMsg(''), 4000)
     }
@@ -163,6 +175,22 @@ export default function AdminInterventions() {
                       <option value="URGENTE">🔴 Urgente</option>
                     </select>
                   </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+                    <div className="form-group"><label className="form-label">Date d&apos;intervention estimée</label>
+                      <input type="date" className="form-input" value={dateIntEst} onChange={e => setDateIntEst(e.target.value)} />
+                    </div>
+                    <div className="form-group"><label className="form-label">Date de clôture</label>
+                      <input type="date" className="form-input" value={dateClo} onChange={e => setDateClo(e.target.value)} />
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+                    <div className="form-group"><label className="form-label">Montant locataire (€)</label>
+                      <input type="number" step="0.01" className="form-input" value={montL} onChange={e => setMontL(e.target.value)} placeholder="0.00" />
+                    </div>
+                    <div className="form-group"><label className="form-label">Montant propriétaire (€)</label>
+                      <input type="number" step="0.01" className="form-input" value={montP} onChange={e => setMontP(e.target.value)} placeholder="0.00" />
+                    </div>
+                  </div>
                   <div className="form-group"><label className="form-label">Commentaire / Réponse au locataire</label>
                     <textarea className="form-textarea" value={commentaire} onChange={e => setCommentaire(e.target.value)} placeholder="Ex: Le technicien viendra le 5 avril..." rows={4} />
                   </div>
@@ -178,7 +206,7 @@ export default function AdminInterventions() {
 
         <div className="table-wrapper">
           <table className="table">
-            <thead><tr><th>Locataire</th><th>Apt.</th><th>Lieu</th><th>Catégorie</th><th>Description</th><th>Priorité</th><th>Statut</th><th>Date</th><th>Action</th></tr></thead>
+            <thead><tr><th>Locataire</th><th>Apt.</th><th>Lieu</th><th>Catégorie</th><th>Priorité</th><th>Statut</th><th>Dates</th><th>Montants</th><th>Action</th></tr></thead>
             <tbody>
               {filtered.map(i => (
                 <tr key={i.id}>
@@ -186,10 +214,18 @@ export default function AdminInterventions() {
                   <td>{i.locataire?.appartement ? <span className="chip chip-primary" style={{ fontSize: '0.7rem' }}>{i.locataire.appartement.numero}</span> : '—'}</td>
                   <td style={{ fontSize: '0.85rem' }}>{i.localisation || '—'}</td>
                   <td style={{ fontSize: '0.85rem' }}>{catLabel[i.categorie]}</td>
-                  <td style={{ fontSize: '0.82rem', color: 'var(--on-surface-variant)', maxWidth: '200px' }}>{i.description.slice(0, 80)}{i.description.length > 80 ? '...' : ''}</td>
+                  <td style={{ fontSize: '0.85rem' }}>{catLabel[i.categorie]}</td>
                   <td><span className={`chip ${prioriteChip[i.priorite]}`}>{i.priorite}</span></td>
                   <td><span className={`chip ${statutChip[i.statut]}`}>{i.statut}</span></td>
-                  <td style={{ fontSize: '0.8rem', color: 'var(--on-surface-muted)' }}>{new Date(i.createdAt).toLocaleDateString('fr-BE')}</td>
+                  <td style={{ fontSize: '0.8rem', color: 'var(--on-surface-muted)' }}>
+                    Créée: {new Date(i.createdAt).toLocaleDateString('fr-BE')}<br/>
+                    Est.: {i.dateInterventionEstimee ? new Date(i.dateInterventionEstimee).toLocaleDateString('fr-BE') : '—'}<br/>
+                    Clôt.: {i.dateCloture ? new Date(i.dateCloture).toLocaleDateString('fr-BE') : '—'}
+                  </td>
+                  <td style={{ fontSize: '0.8rem', color: 'var(--on-surface-muted)' }}>
+                    L: {i.montantLocataire != null ? `${i.montantLocataire.toFixed(2)}€` : '—'}<br/>
+                    P: {i.montantProprietaire != null ? `${i.montantProprietaire.toFixed(2)}€` : '—'}
+                  </td>
                   <td>
                     <button className="btn btn-ghost btn-sm" onClick={() => openEdit(i)} title="Modifier">✎</button>
                     <button className="btn btn-danger btn-sm" onClick={() => deleteInt(i.id)} title="Supprimer">🗑️</button>

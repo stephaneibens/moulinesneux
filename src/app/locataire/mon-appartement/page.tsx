@@ -67,7 +67,7 @@ export default function MonAppartementPage() {
                   <p style={{ color: 'var(--on-surface-variant)', lineHeight: 1.8, fontSize: '0.9rem' }}>{apt.description || 'Aucune description disponible.'}</p>
                   <div style={{ marginTop: 'var(--space-6)', background: 'var(--info-container)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-4)' }}>
                     <p style={{ color: 'var(--info)', fontSize: '0.85rem', fontWeight: 600 }}>ℹ️ Pour toute question concernant votre logement</p>
-                    <p style={{ color: 'var(--info)', fontSize: '0.8rem', marginTop: 'var(--space-2)' }}>Contactez la gestion via la rubrique <strong>Interventions</strong> ou par téléphone.</p>
+                    <p style={{ color: 'var(--info)', fontSize: '0.8rem', marginTop: 'var(--space-2)' }}>Contactez-nous : <strong>admin@moulinesneux.be</strong></p>
                   </div>
                 </div>
               </div>

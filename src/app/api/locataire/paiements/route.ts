@@ -5,7 +5,10 @@ import { prisma } from '@/lib/prisma'
 export async function GET() {
   const user = await requireAuth('LOCATAIRE')
   if (!user) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
-  const paiements = await prisma.paiement.findMany({ where: { locataireId: user.id } })
+  const paiements = await prisma.paiement.findMany({ 
+    where: { locataireId: user.id },
+    orderBy: { createdAt: 'desc' }
+  })
   return NextResponse.json(paiements)
 }
 

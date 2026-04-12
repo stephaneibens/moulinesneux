@@ -96,7 +96,7 @@ export default function TableauDeBordLocataire() {
           {/* Paiements récents */}
           <div className="card">
             <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontSize: '1rem', color: 'var(--primary)' }}>💳 Paiements récents</h3>
+              <h3 style={{ fontSize: '1rem', color: 'var(--primary)' }}>💳 Encours des quittances</h3>
               <Link href="/locataire/paiements" className="btn btn-ghost btn-sm">Voir tout →</Link>
             </div>
             <div className="card-body" style={{ padding: 0 }}>
@@ -114,11 +114,7 @@ export default function TableauDeBordLocataire() {
                 </div>
               ))}
             </div>
-            {paiementsEnAttente > 0 && (
-              <div className="card-footer" style={{ textAlign: 'center' }}>
-                <Link href="/locataire/paiements" className="btn btn-primary btn-sm">💳 Gérer mes paiements</Link>
-              </div>
-            )}
+
           </div>
 
           {/* Annonces */}

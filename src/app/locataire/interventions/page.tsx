@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-interface Intervention { id: number; categorie: string; description: string; statut: string; priorite: string; commentaireAdmin: string | null; localisation?: string | null; photos?: string[]; createdAt: string; updatedAt: string }
+interface Intervention { id: number; categorie: string; description: string; statut: string; priorite: string; commentaireAdmin: string | null; localisation?: string | null; photos?: string[]; createdAt: string; updatedAt: string; dateInterventionEstimee?: string | null; dateCloture?: string | null; montantLocataire?: number | null; montantProprietaire?: number | null; }
 
 const CATEGORIES = ['PLOMBERIE', 'ELECTRICITE', 'CHAUFFAGE', 'MENUISERIE', 'SERRURERIE', 'PEINTURE', 'NETTOYAGE', 'AUTRE']
 const catLabel: Record<string, string> = { PLOMBERIE: '🚿 Plomberie', ELECTRICITE: '⚡ Électricité', CHAUFFAGE: '🔥 Chauffage', MENUISERIE: '🪵 Menuiserie', SERRURERIE: '🔑 Serrurerie', PEINTURE: '🎨 Peinture', NETTOYAGE: '🧹 Nettoyage', AUTRE: '🔧 Autre' }
@@ -29,9 +29,9 @@ export default function InterventionsPage() {
     if (e.target.files) {
       const selectedObj = Array.from(e.target.files)
       setUploadError('')
-      const invalids = selectedObj.filter(f => f.size > 30 * 1024 * 1024)
+      const invalids = selectedObj.filter(f => f.size > 70 * 1024 * 1024)
       if (invalids.length > 0) {
-        setUploadError('Certaines photos dépassent la taille maximale de 30 MB.')
+        setUploadError('Certaines photos dépassent la taille maximale de 70 MB.')
         return
       }
       setPhotosFiles(selectedObj)
@@ -120,7 +120,7 @@ export default function InterventionsPage() {
                     <textarea className="form-textarea" value={description} onChange={e => setDescription(e.target.value)} placeholder="Décrivez le problème en détail..." required rows={4} />
                   </div>
                   <div className="form-group" style={{ marginBottom: 'var(--space-4)' }}>
-                    <label className="form-label">Photos (JPG, PNG, max 30 MB)</label>
+                    <label className="form-label">Photos (JPG, PNG, max 70 MB)</label>
                     <input type="file" className="form-control" multiple accept="image/png, image/jpeg" onChange={handleFileChange} />
                     {uploadError && <p style={{ color: 'var(--error)', fontSize: '0.8rem', marginTop: 'var(--space-2)' }}>{uploadError}</p>}
                     {photosFiles.length > 0 && <p style={{ fontSize: '0.8rem', marginTop: 'var(--space-2)' }}>{photosFiles.length} fichier(s) sélectionné(s)</p>}
@@ -169,6 +169,16 @@ export default function InterventionsPage() {
                     {i.commentaireAdmin && (
                       <div style={{ background: 'var(--info-container)', borderRadius: 'var(--radius-lg)', padding: 'var(--space-3) var(--space-4)', fontSize: '0.85rem', color: 'var(--info)' }}>
                         <strong>💬 Réponse de la gestion :</strong> {i.commentaireAdmin}
+                      </div>
+                    )}
+                    { (i.dateInterventionEstimee || i.dateCloture || i.montantLocataire != null || i.montantProprietaire != null) && (
+                      <div style={{ padding: 'var(--space-3)', background: 'var(--surface-sunken)', borderRadius: 'var(--radius-lg)', marginTop: 'var(--space-3)' }}>
+                        <div style={{ display: 'flex', gap: 'var(--space-4)', flexWrap: 'wrap', fontSize: '0.85rem' }}>
+                          {i.dateInterventionEstimee && <p><strong>📅 Date estimée:</strong> {new Date(i.dateInterventionEstimee).toLocaleDateString('fr-BE')}</p>}
+                          {i.dateCloture && <p><strong>🏁 Date de clôture:</strong> {new Date(i.dateCloture).toLocaleDateString('fr-BE')}</p>}
+                          {i.montantLocataire != null && <p><strong>💰 À votre charge:</strong> {i.montantLocataire.toFixed(2)} €</p>}
+                          {i.montantProprietaire != null && <p><strong>🏢 À charge proprio:</strong> {i.montantProprietaire.toFixed(2)} €</p>}
+                        </div>
                       </div>
                     )}
                     <p style={{ fontSize: '0.75rem', color: 'var(--on-surface-muted)', marginTop: 'var(--space-3)' }}>

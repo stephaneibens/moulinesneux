@@ -1,38 +1,34 @@
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { put } from '@vercel/blob';
 
-export async function POST(req: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
+  const body = (await request.json()) as HandleUploadBody;
+  
   try {
-    const user = await getCurrentUser();
-    if (!user) {
-      return NextResponse.json({ error: 'Non autorisé' }, { status: 403 });
-    }
-
-    const data = await req.formData();
-    const file: File | null = data.get('file') as unknown as File;
-    
-    if (!file || typeof file === 'string') {
-      return NextResponse.json({ error: 'Aucun fichier fourni' }, { status: 400 });
-    }
-
-    const MAX_SIZE = 70 * 1024 * 1024;
-    if (file.size > MAX_SIZE) {
-      return NextResponse.json({ error: 'Le fichier dépasse la taille maximale de 70 MB' }, { status: 400 });
-    }
-
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
-    const filename = uniqueSuffix + '-' + safeName;
-
-    const blob = await put(filename, file, { 
-      access: 'public',
-      addRandomSuffix: false 
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async (pathname) => {
+        const user = await getCurrentUser();
+        if (!user) {
+          throw new Error('Non autorisé');
+        }
+        return {
+          maximumSizeInBytes: 70 * 1024 * 1024, // 70MB
+        };
+      },
+      onUploadCompleted: async ({ blob }) => {
+        console.log('Upload completed:', blob.url);
+      },
     });
 
-    return NextResponse.json({ url: blob.url });
-  } catch (e: any) {
-    console.error('Erreur upload:', e);
-    return NextResponse.json({ error: e.message || "Erreur lors de l'upload du fichier" }, { status: 500 });
+    return NextResponse.json(jsonResponse);
+  } catch (error: any) {
+    console.error('Erreur upload client:', error);
+    return NextResponse.json(
+      { error: error.message || "Erreur lors de l'upload du fichier" },
+      { status: 400 }
+    );
   }
 }

@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useRef } from 'react'
+import { upload } from '@vercel/blob/client'
 
 interface DropzoneProps {
   onUpload: (url: string) => void
@@ -11,6 +12,7 @@ interface DropzoneProps {
 export function Dropzone({ onUpload, accept = "*/*", maxSizeMB = 70 }: DropzoneProps) {
   const [isHover, setIsHover] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<boolean>(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -24,27 +26,27 @@ export function Dropzone({ onUpload, accept = "*/*", maxSizeMB = 70 }: DropzoneP
     }
 
     setIsUploading(true)
+    setUploadProgress(0)
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-      
-      const res = await fetch('/api/upload', {
-        method: 'POST',
-        body: formData
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+      const filename = uniqueSuffix + '-' + safeName;
+
+      const blob = await upload(filename, file, {
+        access: 'public',
+        handleUploadUrl: '/api/upload',
+        onUploadProgress: (progressEvent) => {
+           setUploadProgress(Math.round((progressEvent.loaded / progressEvent.total) * 100))
+        }
       })
       
-      const data = await res.json()
-      
-      if (!res.ok) {
-        throw new Error(data.error || "Erreur lors de l'upload")
-      }
-      
       setSuccess(true)
-      onUpload(data.url)
+      onUpload(blob.url)
     } catch (e: any) {
-      setError(e.message)
+      setError(e.message || "Erreur lors de l'upload")
     } finally {
       setIsUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -81,7 +83,12 @@ export function Dropzone({ onUpload, accept = "*/*", maxSizeMB = 70 }: DropzoneP
         className="hidden"
       />
       {isUploading ? (
-        <p className="text-[var(--text-secondary)]">Téléversement en cours...</p>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <p className="text-[var(--text-secondary)]">Téléversement en cours... {uploadProgress ? `${uploadProgress}%` : ''}</p>
+          <div style={{ width: '100%', maxWidth: '200px', backgroundColor: '#e5e7eb', borderRadius: '999px', height: '10px' }}>
+            <div style={{ backgroundColor: 'var(--color-primary)', height: '10px', borderRadius: '999px', width: `${uploadProgress}%`, transition: 'width 0.3s' }}></div>
+          </div>
+        </div>
       ) : success ? (
         <p className="text-green-500 font-medium">Fichier téléversé avec succès !</p>
       ) : (
